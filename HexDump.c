@@ -4,7 +4,7 @@
 
 char* version = "1.0";
 
-unsigned char* ReadFile(char* fileName, long fsize) {
+unsigned char* ReadFile(const char* fileName, long fsize) {
   FILE *f = fopen(fileName, "rb");
   unsigned char *data = malloc(fsize + 1);
   fread(data, 1, fsize, f);
@@ -14,13 +14,24 @@ unsigned char* ReadFile(char* fileName, long fsize) {
   return data;
 }
 
-long GetFileSize(char* fileName) {
+long GetFileSize(const char* fileName) {
   FILE *f = fopen(fileName, "rb");
   fseek(f, 0, SEEK_END);
   long fsize = ftell(f);
   fseek(f, 0, SEEK_SET);
   fclose(f);
   return fsize;
+}
+
+int FileExists(const char *fileName)
+{
+    FILE *file;
+    if ((file = fopen(fileName, "r")))
+    {
+        fclose(file);
+        return 1;
+    }
+    return 0;
 }
 
 void PrintVersion() {
@@ -45,9 +56,20 @@ int main(int argc, char *argv[]) {
         PrintHelp();
       }
       else {
-        printf("Unrecognized argument: ");
-        printf(argv[i]);
-        printf("\n");
+        if (FileExists(argv[i]) == 1) {
+          long fsize = GetFileSize(argv[1]);
+          unsigned char *data = ReadFile(argv[1], fsize);
+
+          for (int i = 0; i < fsize; i++)
+            printf ("0x%x ", data[i]);
+
+          printf("\n");
+        }
+        else {
+          printf("Couldnt' find file: ");
+          printf(argv[i]);
+          printf("\n");
+        }
       }
     }
   }
@@ -55,11 +77,5 @@ int main(int argc, char *argv[]) {
     printf("No arguments found. Use -h or --help to list commands.\n");
   }
 
-  /*long fsize = GetFileSize(argv[1]);
-  unsigned char *data = ReadFile(argv[1], fsize);
-
-  for (int i = 0; i < fsize; i++)
-    printf ("0x%x ", data[i]);
-    */
   return 0;
 }
