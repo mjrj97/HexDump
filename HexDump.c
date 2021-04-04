@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-char* version = "1.0";
+const char* version = "1.1";
 
+// Reads the file a the specified location and size.
 unsigned char* ReadFile(const char* fileName, long fsize) {
   FILE *f = fopen(fileName, "rb");
   unsigned char *data = malloc(fsize + 1);
@@ -14,6 +15,7 @@ unsigned char* ReadFile(const char* fileName, long fsize) {
   return data;
 }
 
+// Returns the size of the file in bytes.
 long GetFileSize(const char* fileName) {
   FILE *f = fopen(fileName, "rb");
   fseek(f, 0, SEEK_END);
@@ -23,6 +25,7 @@ long GetFileSize(const char* fileName) {
   return fsize;
 }
 
+// Returns 1 if the file exists and 0 if not.
 int FileExists(const char *fileName)
 {
     FILE *file;
@@ -34,12 +37,14 @@ int FileExists(const char *fileName)
     return 0;
 }
 
+// Prints the version of the program.
 void PrintVersion() {
   printf("Version: ");
   printf(version);
   printf("\n");
 }
 
+// Prints the possible command-line options.
 void PrintHelp() {
   printf("Command-line options:\n");
   printf("   -v, --version       print version information\n");
@@ -64,6 +69,7 @@ int main(int argc, char *argv[]) {
             printf ("0x%x ", data[i]);
 
           printf("\n");
+          free(data);
         }
         else {
           printf("Couldnt' find file: ");
