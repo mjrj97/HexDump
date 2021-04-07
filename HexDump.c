@@ -65,10 +65,30 @@ int main(int argc, char *argv[]) {
           long fsize = GetFileSize(argv[1]);
           unsigned char *data = ReadFile(argv[1], fsize);
 
-          for (int i = 0; i < fsize; i++)
-            printf ("0x%x ", data[i]);
+          /*for (int i = 0; i < fsize; i++)
+            printf ("0x%x ", data[i]);*/
 
-          printf("\n");
+          char ascii[17];
+          ascii[16] = "\0";
+
+          for (int i = 0; i < fsize; i++) {
+            if (i%16 == 0 && i != 0)
+            {
+              printf(ascii);
+              printf("\n");
+            }
+            if (i%16 == 0)
+            {
+              printf("%08x ", i);
+            }
+            printf ("%02x ", data[i]);
+            if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= '~') {
+			        ascii[i % 16] = ((unsigned char*)data)[i];
+		        } else {
+			        ascii[i % 16] = '.';
+		        }
+          }
+
           free(data);
         }
         else {
