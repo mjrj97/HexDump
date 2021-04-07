@@ -69,24 +69,24 @@ int main(int argc, char *argv[]) {
             printf ("0x%x ", data[i]);*/
 
           char ascii[17];
-          ascii[16] = "\0";
+          ascii[16] = 0;
+          int rest = fsize%16 == 0 ? 0 : 16 - fsize%16;
 
-          for (int i = 0; i < fsize; i++) {
-            if (i%16 == 0 && i != 0)
+          for (long i = 0; i < fsize + rest; i++) {
+            if (i%16 == 0)
+              printf("%08x ", i);
+            if (i >= fsize) {
+              ascii[i % 16] = ' ';
+              printf ("   ");
+            } else {
+			        ascii[i % 16] = data[i] >= ' ' && data[i] <= '~' ? data[i] : '.';
+              printf ("%02x ", data[i]);
+		        }
+            if (i%16 == 15)
             {
               printf(ascii);
               printf("\n");
             }
-            if (i%16 == 0)
-            {
-              printf("%08x ", i);
-            }
-            printf ("%02x ", data[i]);
-            if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= '~') {
-			        ascii[i % 16] = ((unsigned char*)data)[i];
-		        } else {
-			        ascii[i % 16] = '.';
-		        }
           }
 
           free(data);
