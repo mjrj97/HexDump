@@ -11,6 +11,8 @@ unsigned char* GenerateDump(unsigned char *data) {
   int i, j, rows = fsize/16;
   if (fsize%16 != 0)
     rows++;
+  printf("%u\n", fsize);
+  printf("%u\n", rows);
   unsigned char *dump = malloc(73*rows);
   for (i = 0; i < rows; i++) {
     int offset = i*73;
@@ -59,7 +61,7 @@ unsigned char* LoadFile(unsigned char *fileName) {
 // Hex dumps the file to the console.
 void DumpToConsole(unsigned char *fileName) {
   unsigned char *data = LoadFile(fileName);
-  printf(GenerateDump(data));
+  printf("%s", GenerateDump(data));
   free(data);
 }
 
@@ -67,7 +69,7 @@ void DumpToConsole(unsigned char *fileName) {
 void DumpToFile(unsigned char *fileName, unsigned char *destination) {
   unsigned char *data = LoadFile(fileName);
   FILE *f = fopen(destination, "w");
-  fprintf(f, GenerateDump(data));
+  fprintf(f, "%s", GenerateDump(data));
   fclose(f);
   free(data);
 }
