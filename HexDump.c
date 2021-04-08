@@ -2,80 +2,78 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char* version = "1.4";
+const char* version = "1.5";
+const char hex[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+unsigned int fsize = 0;
 
-// Loads the bytes from a file.
-void DumpToConsole(unsigned char *fileName) {
-  FILE *f = fopen(fileName, "rb");
-  fseek(f, 0, SEEK_END);
-  unsigned int fsize = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  unsigned char *data = malloc(fsize + 1);
-  fread(data, 1, fsize, f);
-  fclose(f);
-  data[fsize] = 0;
+// Generates hex dump as string ending with \0.
+unsigned char* GenerateDump(unsigned char *data) {
+  int i, j, rows = fsize/16;
+  if (fsize%16 != 0)
+    rows++;
+  unsigned char *dump = malloc(73*rows);
+  for (i = 0; i < rows; i++) {
+    int offset = i*73;
+    
+    char address[8];
+    sprintf(address, "%08x", i*16);
+    for (j = 0; j < 8; j++) {
+      dump[offset + j] = address[j];
+    }
 
-  char ascii[17];
-  ascii[16] = 0;
-  unsigned int i;
+    dump[i*73+8] = ' ';
+    for (j = 0; j < 16; j++) {
+      if (i*16+j < fsize) {
+        unsigned char d = data[i*16+j];
+        dump[offset+j*3+9] = hex[d/16];
+        dump[offset+j*3+10] = hex[d%16];
+        dump[offset+j*3+11] = ' ';
+        dump[offset+57+j] = d >= ' ' && d <= '~' ? d : '.';
+      } else {
+        dump[offset+j*3+9] = ' ';
+        dump[offset+j*3+10] = ' ';
+        dump[offset+j*3+11] = ' ';
+        dump[offset+57+j] = ' ';
+      }
+    }
 
-  for (i = 0; i < fsize; i++) {
-    if (i%16 == 0)
-      printf("%08x ", i);
-    ascii[i % 16] = data[i] >= ' ' && data[i] <= '~' ? data[i] : '.';
-    printf ("%02x ", data[i]);
-    if (i%16 == 15)
-      printf("%s\n", ascii);
+    if (i != 0)
+      dump[offset-1] = '\n';
   }
-  for (i = fsize%16; i < 16; i++) {
-    ascii[i % 16] = ' ';
-    printf ("   ");
-    if (i == 15)
-      printf("%s\n", ascii);
-  }
-
-  free(data);
+  dump[73*rows-1] = 0;
+  return dump;
 }
 
 // Loads the bytes from a file.
-void DumpToFile(unsigned char *fileName, unsigned char *destination) {
+unsigned char* LoadFile(unsigned char *fileName) {
   FILE *f = fopen(fileName, "rb");
   fseek(f, 0, SEEK_END);
-  unsigned int fsize = ftell(f);
+  fsize = ftell(f);
   fseek(f, 0, SEEK_SET);
-  unsigned char *data = malloc(fsize + 1);
+  unsigned char *data = malloc(fsize);
   fread(data, 1, fsize, f);
   fclose(f);
-  data[fsize] = 0;
+  return data;
+}
 
-  fopen(destination, "w");
-  char ascii[17];
-  ascii[16] = 0;
-  unsigned int i;
+// Hex dumps the file to the console.
+void DumpToConsole(unsigned char *fileName) {
+  unsigned char *data = LoadFile(fileName);
+  printf(GenerateDump(data));
+  free(data);
+}
 
-  for (i = 0; i < fsize; i++) {
-    if (i%16 == 0)
-      fprintf(f, "%08x ", i);
-    ascii[i % 16] = data[i] >= ' ' && data[i] <= '~' ? data[i] : '.';
-    fprintf (f, "%02x ", data[i]);
-    if (i%16 == 15)
-      fprintf(f, "%s\n", ascii);
-  }
-  for (i = fsize%16; i < 16; i++) {
-    ascii[i % 16] = ' ';
-    fprintf (f, "   ");
-    if (i == 15)
-      fprintf(f, "%s\n", ascii);
-  }
-  printf("Hex dumped to: %s\n", destination);
+// Hex dumps the file to another file.
+void DumpToFile(unsigned char *fileName, unsigned char *destination) {
+  unsigned char *data = LoadFile(fileName);
+  FILE *f = fopen(destination, "w");
+  fprintf(f, GenerateDump(data));
   fclose(f);
-
   free(data);
 }
 
 // Returns 1 if the file exists and 0 if not.
-int FileExists(unsigned char *fileName)
-{
+int FileExists(unsigned char *fileName) {
     FILE *file;
     if ((file = fopen(fileName, "r")))
     {
@@ -95,14 +93,12 @@ void PrintHelp() {
 
 // Returns the integer corresponding to a command.
 int GetCommand(unsigned char *arg) {
-  int command = 0;
-
   if (strcmp(arg, "-v") == 0 || strcmp(arg, "--version") == 0)
-    command = 1;
+    return 1;
   else if (strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0)
-    command = 2;
-
-  return command;
+    return 2;
+  else
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
